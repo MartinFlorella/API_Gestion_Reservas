@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de Facturas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #1b1b1b;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        table {
+            width: 100%;
+            max-width: 1700px;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #333;
+            color: #fff;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+            word-wrap: break-word;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #2c3e50;
+        }
+
+        tr:hover {
+            background-color: #34495e;
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 20px;
+            color: #bbb;
+            margin-top: 20px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        a.volver {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 15px 30px;
+            font-size: 18px;
+            color: white;
+            background-color: #3498db;
+            border: none;
+            border-radius: 10px;
+            text-decoration: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        a.volver:hover {
+            background-color: #2980b9;
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body>
+    <h2>Listado de Facturas</h2>
+
+    <!-- Input para búsqueda -->
+    <div class="search-container">
+        <input type="text" id="nombreBusqueda" placeholder="Buscar por nombre o reserva...">
+        <button onclick="buscarFacturas()">Buscar</button>
+    </div>
+
+    <div class="loading" id="loadingMessage">Cargando facturas...</div>
+
+    <table id="facturasTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>ID Factura</th>
+                <th>Monto Total</th>
+                <th>Fecha de Emisión</th>
+                <th>Estado</th>
+                <th>Inicio Reserva</th>
+                <th>Fin Reserva</th>
+                <th>Usuario (Reserva)</th>
+                <th>Espacio (Reserva)</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="facturasBody">
+            <!-- Las filas de las facturas serán añadidas aquí dinámicamente -->
+        </tbody>
+    </table>
+    <a href="index.html" class="volver">Volver</a>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const loadingMessage = document.getElementById('loadingMessage');
+            const facturasTable = document.getElementById('facturasTable');
+            const facturasBody = document.getElementById('facturasBody');
+
+            // Función para cargar todas las facturas
+            function cargarFacturas() {
+                fetch('/factura/traer')
+                    .then(response => response.json())
+                    .then(facturas => {
+                        if (facturas.length === 0) {
+                            loadingMessage.textContent = 'No hay facturas disponibles.';
+                            return;
+                        }
+
+                        // Ocultar el mensaje de carga
+                        loadingMessage.style.display = 'none';
+                        facturasTable.style.display = 'table';
+
+                        // Recorrer cada factura y añadirla a la tabla
+                        facturas.forEach(factura => {
+                            const fila = document.createElement('tr');
+                            fila.innerHTML = `
+                                <td>${factura.idFactura}</td>
+                                <td>$${factura.montoTotal.toFixed(2)}</td>
+                                <td>${new Date(factura.fechaEmision).toLocaleDateString()}</td>
+                                <td id="estado-${factura.idFactura}">${factura.estado}</td>
+                                <td>${new Date(factura.reserva.inicioReserva).toLocaleString()}</td>
+                                <td>${new Date(factura.reserva.finReserva).toLocaleString()}</td>
+                                <td>${factura.reserva.usuario.nombre} ${factura.reserva.usuario.apellido} (${factura.reserva.usuario.email})</td>
+                                <td>${factura.reserva.espacio.nombre} - ${factura.reserva.espacio.descripcion}</td>
+                                <td class="action-buttons">
+                                    <button onclick="cambiarEstado(${factura.idFactura})">Cambiar Estado</button>
+                                </td>
+                            `;
+                            facturasBody.appendChild(fila);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar facturas:', error);
+                        loadingMessage.textContent = 'Ocurrió un error al cargar las facturas.';
+                    });
+            }
+
+            // Función para buscar facturas por nombre
+            function buscarFacturas() {
+                const nombre = document.getElementById('nombreBusqueda').value.trim();
+
+                // Si el campo de búsqueda está vacío, cargar todas las facturas
+                if (!nombre) {
+                    facturasBody.innerHTML = ''; // Limpiar la tabla
+                    cargarFacturas();
+                    return;
+                }
+
+                // Limpiar la tabla antes de la búsqueda
+                facturasBody.innerHTML = '';
+                loadingMessage.textContent = 'Cargando facturas...';
+                loadingMessage.style.display = 'block';
+                facturasTable.style.display = 'none';
+
+                // Realizar la búsqueda de facturas
+                fetch(`/factura/traerPorNombre/${nombre}`)
+                    .then(response => response.json())
+                    .then(facturas => {
+                        if (facturas.length === 0) {
+                            loadingMessage.textContent = 'No se encontraron facturas para la búsqueda.';
+                            return;
+                        }
+
+                        loadingMessage.style.display = 'none';
+                        facturasTable.style.display = 'table';
+
+                        // Añadir los resultados de la búsqueda a la tabla
+                        facturas.forEach(factura => {
+                            const fila = document.createElement('tr');
+                            fila.innerHTML = `
+                                <td>${factura.idFactura}</td>
+                                <td>$${factura.montoTotal.toFixed(2)}</td>
+                                <td>${new Date(factura.fechaEmision).toLocaleDateString()}</td>
+                                <td id="estado-${factura.idFactura}">${factura.estado}</td>
+                                <td>${new Date(factura.reserva.inicioReserva).toLocaleString()}</td>
+                                <td>${new Date(factura.reserva.finReserva).toLocaleString()}</td>
+                                <td>${factura.reserva.usuario.nombre} ${factura.reserva.usuario.apellido} (${factura.reserva.usuario.email})</td>
+                                <td>${factura.reserva.espacio.nombre} - ${factura.reserva.espacio.descripcion}</td>
+                                <td class="action-buttons">
+                                    <button onclick="cambiarEstado(${factura.idFactura})">Cambiar Estado</button>
+                                </td>
+                            `;
+                            facturasBody.appendChild(fila);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error al buscar facturas:', error);
+                        loadingMessage.textContent = 'Ocurrió un error en la búsqueda.';
+                    });
+            }
+
+            // Cargar todas las facturas al cargar la página
+            cargarFacturas();
+
+            // Hacer la función global
+            window.buscarFacturas = buscarFacturas;
+        });
+
+        // Función global para cambiar el estado de una factura
+function cambiarEstado(idFactura) {
+    fetch(`/factura/editarEstado/${idFactura}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error en la actualización del estado');
+        }
+        return response.json();
+    })
+    .then(facturaActualizada => {
+        // Actualizar el estado en la tabla directamente sin recargar la página
+        const estadoTd = document.getElementById(`estado-${facturaActualizada.idFactura}`);
+        estadoTd.textContent = facturaActualizada.estado;
+
+        alert(`El estado de la factura ${facturaActualizada.idFactura} ha sido actualizado a: ${facturaActualizada.estado}`);
+    })
+    .catch(error => {
+        console.error('Error al actualizar el estado:', error);
+        alert('Hubo un problema al cambiar el estado de la factura.');
+    });
+}
+    </script>
+</body>
+</html>

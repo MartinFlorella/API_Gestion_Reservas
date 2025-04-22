@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Espacios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #1b1b1b;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .search-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .search-container input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 300px;
+            border-radius: 5px;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-left: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .search-container button:hover {
+            background-color: #2980b9;
+            transform: translateY(-3px);
+        }
+
+        table {
+            width: 90%;
+            max-width: 1000px;
+            margin: 0 auto;
+            border-collapse: collapse;
+            background-color: #333;
+            color: #fff;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        td {
+            background-color: #2c3e50;
+        }
+
+        tr:hover {
+            background-color: #34495e;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .actions button {
+            padding: 8px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .actions button.edit {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .actions button.edit:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        .actions button.delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .actions button.delete:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 20px;
+            color: #bbb;
+            margin-top: 20px;
+        }
+
+        a.volver {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 15px 30px;
+            font-size: 18px;
+            color: white;
+            background-color: #3498db;
+            border: none;
+            border-radius: 10px;
+            text-decoration: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        a.volver:hover {
+            background-color: #2980b9;
+            transform: translateY(-5px);
+        }
+
+    </style>
+</head>
+<body>
+
+    <h2>Espacios Disponibles</h2>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Buscar espacio por nombre...">
+        <button onclick="buscarEspacio()">Buscar</button>
+    </div>
+
+    <table id="espaciosTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Precio por Hora</th>
+                <th>Acciones</th> <!-- Nueva columna de acciones -->
+            </tr>
+        </thead>
+        <tbody id="espaciosBody">
+            <!-- Los datos de espacios se cargarán aquí -->
+        </tbody>
+    </table>
+
+    <div class="loading" id="loading">Cargando espacios...</div>
+
+    <a href="index.html" class="volver">Volver</a>
+
+    <script>
+        // Función para obtener espacios desde el backend
+        async function fetchEspacios() {
+            try {
+                const response = await fetch('/espacio/traer');
+                const espacios = await response.json();
+                mostrarEspacios(espacios);
+            } catch (error) {
+                console.error('Error al obtener los espacios:', error);
+            }
+        }
+
+        // Función para mostrar espacios en la tabla
+        function mostrarEspacios(espacios) {
+    const espaciosBody = document.getElementById('espaciosBody');
+    const loadingDiv = document.getElementById('loading');
+
+    espaciosBody.innerHTML = ''; // Limpiar tabla anterior
+    loadingDiv.style.display = 'none'; // Ocultar el mensaje de carga
+
+    if (espacios.length > 0) {
+        espacios.forEach(espacio => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${espacio.idEspacio}</td>
+                <td>${espacio.nombre}</td>
+                <td>${espacio.descripcion}</td>
+                <td>${espacio.precioPorHora}</td>
+                <td>
+                    <div class="actions">
+                        <button class="edit">Editar</button>
+                        <button class="delete" onclick="eliminarEspacio(${espacio.idEspacio})">Eliminar</button>
+                    </div>
+                </td>
+            `;
+            espaciosBody.appendChild(row);
+        });
+    } else {
+        espaciosBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No se encontraron espacios.</td></tr>';
+    }
+}
+
+        // Función para buscar espacios por nombre
+        async function buscarEspacio() {
+            const nombre = document.getElementById('searchInput').value.trim(); // Eliminar espacios en blanco
+
+            // Si el input está vacío, mostrar todos los espacios
+            if (nombre === '') {
+                fetchEspacios();
+                return;
+            }
+
+            try {
+                const response = await fetch(`/espacio/traerPorNombre/${nombre}`);
+                const espacios = await response.json();
+                mostrarEspacios(espacios);
+            } catch (error) {
+                console.error('Error al buscar los espacios:', error);
+            }
+        }
+
+        // Llamar a la función cuando se carga la página
+        window.onload = fetchEspacios;
+
+        async function eliminarEspacio(idEspacio) {
+    if (confirm("¿Estás seguro de que deseas eliminar este espacio?")) {
+        try {
+            const response = await fetch(`/espacio/borrar/${idEspacio}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                alert("Espacio eliminado con éxito");
+                fetchEspacios(); // Actualizar la tabla después de eliminar
+            } else {
+                alert("Error al eliminar el espacio");
+            }
+        } catch (error) {
+            console.error('Error al eliminar el espacio:', error);
+            alert("Error al eliminar el espacio");
+        }
+    }
+}
+
+    </script>
+
+</body>
+</html>

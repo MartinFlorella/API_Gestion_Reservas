@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Usuarios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos existentes */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #1b1b1b;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .search-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .search-container input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 300px;
+            border-radius: 5px;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-left: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .search-container button:hover {
+            background-color: #2980b9;
+            transform: translateY(-3px);
+        }
+
+        table {
+            width: 90%;
+            max-width: 1000px;
+            margin: 0 auto;
+            border-collapse: collapse;
+            background-color: #333;
+            color: #fff;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        td {
+            background-color: #2c3e50;
+        }
+
+        tr:hover {
+            background-color: #34495e;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .actions button {
+            padding: 8px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .actions button.edit {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .actions button.edit:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        .actions button.delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .actions button.delete:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 20px;
+            color: #bbb;
+            margin-top: 20px;
+        }
+
+        a.volver {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 15px 30px;
+            font-size: 18px;
+            color: white;
+            background-color: #3498db;
+            border: none;
+            border-radius: 10px;
+            text-decoration: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        a.volver:hover {
+            background-color: #2980b9;
+            transform: translateY(-5px);
+        }
+
+        /* Estilos para el modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #2c3e50;
+            padding: 20px;
+            border-radius: 10px;
+            width: 400px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content input[type="text"],
+        .modal-content input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            font-size: 16px;
+        }
+
+        .modal-content button {
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .modal-content button:hover {
+            background-color: #2980b9;
+            transform: translateY(-3px);
+        }
+
+    </style>
+</head>
+<body>
+
+    <h2>Usuarios Registrados</h2>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Buscar usuario por nombre o apellido...">
+        <button onclick="buscarUsuario()">Buscar</button>
+    </div>
+
+    <table id="usuariosTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Email</th>
+                <th>Acciones</th> <!-- Nueva columna de acciones -->
+            </tr>
+        </thead>
+        <tbody id="usuariosBody">
+            <!-- Los datos de usuarios se cargarán aquí -->
+        </tbody>
+    </table>
+
+    <div class="loading" id="loading">Cargando usuarios...</div>
+    <a href="indexUsuarios.html" class="volver">Volver</a>
+
+    <!-- Modal para editar usuario -->
+    <div class="modal" id="modalEditar">
+        <div class="modal-content">
+            <h3>Editar Usuario</h3>
+            <input type="text" id="editNombre" placeholder="Nombre">
+            <input type="text" id="editApellido" placeholder="Apellido">
+            <input type="email" id="editEmail" placeholder="Email">
+            <button onclick="confirmarEdicion()">Confirmar Edición</button>
+        </div>
+    </div>
+
+    <script>
+        let usuarioSeleccionado = null;
+    
+        // Función para obtener todos los usuarios desde el backend
+        async function fetchUsuarios() {
+            try {
+                const response = await fetch('/usuario/traer');
+                const usuarios = await response.json();
+                mostrarUsuarios(usuarios);
+            } catch (error) {
+                console.error('Error al obtener los usuarios:', error);
+            }
+        }
+    
+        // Función para buscar usuarios por nombre o apellido
+        async function buscarUsuario() {
+            const nombre = document.getElementById('searchInput').value;
+            if (!nombre) {
+                fetchUsuarios();
+                return;
+            }
+    
+            try {
+                const response = await fetch(`/usuario/traerPorNombre/${nombre}`);
+                const usuarios = await response.json();
+                mostrarUsuarios(usuarios);
+            } catch (error) {
+                console.error('Error al buscar los usuarios:', error);
+            }
+        }
+    
+        // Función para mostrar usuarios en la tabla
+        function mostrarUsuarios(usuarios) {
+            const usuariosBody = document.getElementById('usuariosBody');
+            const loadingDiv = document.getElementById('loading');
+    
+            usuariosBody.innerHTML = '';
+            loadingDiv.style.display = 'none';
+    
+            if (usuarios.length > 0) {
+                usuarios.forEach(usuario => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${usuario.id}</td>
+                        <td>${usuario.nombre}</td>
+                        <td>${usuario.apellido}</td>
+                        <td>${usuario.email}</td>
+                        <td class="actions">
+                            <button class="edit" onclick="editarUsuario(${usuario.id})">Editar</button>
+                            <button class="delete" onclick="eliminarUsuario(${usuario.id})">Eliminar</button>
+                        </td>
+                    `;
+                    usuariosBody.appendChild(row);
+                });
+            } else {
+                usuariosBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No se encontraron usuarios</td></tr>';
+            }
+        }
+        
+        window.onload = fetchUsuarios;
+    
+    </script>
+    
+ 
+
+</body>
+</html>
